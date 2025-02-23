@@ -1,0 +1,497 @@
+bool checkDataRxd()
+{
+  if (doConnect)
+  {
+    if (connectToServer())
+    {
+
+      // Set the command characteristic's value to SEND_DATA
+      pcommandCharacteristic->writeValue("SEND_DATA"); // Now returns true or false to indicate success or failure so you can choose to disconnect or try again.
+      // pdataCharacteristic->writeValue(""); ---Reason for the fuss
+      // Time for client to read the command & publish the data
+      delay(1000);
+      Serial.println("    - Set SEND_DATA!");
+      while (connected)
+      {
+        String commandRxd = pcommandCharacteristic->readValue().c_str();
+        if (commandRxd == "SEND_DATA")
+        {
+          // Data not yet updated by Client
+          //pBLEScan->clearResults(); // We want a fresh scan & free memory
+          //pClient->disconnect();    // Maybe we get correct data in the next attempt to connect
+          doConnect = false;
+        }
+        else if (commandRxd == "DATA_WRITTEN")
+        {
+          /*---------------------------------------------------PROBLEM: Will crash if the below characteristic reads NULL----------------------------------------------------------*/
+          String dataRxd = pdataCharacteristic->readValue().c_str();
+          char databuffer[100]; //-----------------------------------Change size as the data could be big (For Example: 3-4 days)
+          Serial.print("    - Data received is: ");
+          Serial.print(dataRxd);
+          dataRxd.toCharArray(databuffer, 100);
+          /*---------------------------------------------------PROBLEM: logSDCard(dataRxd); return value should be created & handled----------------------------------------------------------*/
+          Serial.print("  Phase2: Storage progress details - ");
+          logSDCard(databuffer);
+          pcommandCharacteristic->writeValue("DATA_RECEIVED"); // Now returns true or false to indicate success or failure so you can choose to disconnect or try again.
+          pdataCharacteristic->writeValue("");                 // Now returns true or false to indicate success or failure so you can choose to disconnect or try again.
+          // Wait for client to read the ACK
+          Serial.println("    - Set DATA_RECEIVED!");
+          delay(1000);                            // 2000
+          pcommandCharacteristic->writeValue(""); // Now returns true or false to indicate success or failure so you can choose to disconnect or try again.
+          pBLEScan->clearResults();
+          pClient->disconnect();
+          NimBLEDevice::deleteClient(pClient);
+          connected = false;
+          doConnect = false;
+        }
+        else
+        {
+          // Ignore (Could be "" set by Client after receiving ACK from Master)
+          doConnect = false;
+        }
+      }
+      // return false; //Don't call stop scan
+    }
+    else
+    {
+      Serial.println("    - Couldn't connect, will Try again.");
+      pBLEScan->clearResults(); // We want a fresh scan & free memory
+      doConnect = false;
+      // return true; //Call stop scan
+    }
+  }
+  else
+  {
+    // return true; //Call stop scan
+  }
+  delay(2000);
+  return true;
+}
+
+// Read data from Bluetooth
+void ReadUserConfigData() {
+    while (SerialBT.available()) {
+        char incomingChar = SerialBT.read(); // Read one character
+        Serial.write(incomingChar);         // Echo the character to Serial Monitor
+        if (incomingChar == '$') {         // Check for end of message (newline character)
+            UserdataAvailable = true;       // Mark data as complete
+            SerialBT.disconnect();                 // Stop Bluetooth communication
+            delay(200);
+            SerialBT.end(); // Disable Bluetooth
+            //SerialBT.memrelease(); // Release memory
+            delay(2000);
+            break;
+        }
+        receivedData += incomingChar;       // Append character to buffer
+    }
+}
+
+// Process received data and extract user information
+void processData(String data) {
+    // Print the raw data received for debugging
+    //Serial.println(F("Raw Data Received:"));
+    //Serial.println(data);
+
+    // Replace the delimiter "*,*" with a space for easier parsing
+    data.replace("*,*", "|");
+    //Serial.println(F("Data After Replacing Delimiters:"));
+    //Serial.println(data);
+
+    // Split the string using space as a delimiter
+    int firstSpace = data.indexOf('|');  // Find first space
+    int secondSpace = data.indexOf('|', firstSpace + 1); // Find second space
+    int thirdSpace = data.indexOf('|', secondSpace + 1);
+    int fourthSpace = data.indexOf('|', thirdSpace + 1);
+    int endSpace = data.indexOf('|', fourthSpace + 1);
+
+    if (firstSpace != -1 && secondSpace != -1) {
+        String freq = data.substring(0, firstSpace);  // Extract frequency
+        String location = data.substring(firstSpace + 1, secondSpace); // Extract location
+        String ssid = data.substring(secondSpace + 1, thirdSpace);  // Extract ID
+        String password = data.substring(thirdSpace + 1, fourthSpace); //Extract Password
+        String emailid = data.substring(fourthSpace + 1, endSpace); //Extract EmailID
+
+        // Debugging: Print parsed values
+        Serial.println(F("Data entered & received from customer: "));
+        Serial.println("Frequency: " + freq);
+        Serial.println("Location: " + location);
+        Serial.println("WIFI-SSID: " + ssid);
+        Serial.println("PASSWORD: " + password);
+        Serial.println("Email-ID: " + emailid);
+
+        // Save parsed data into the userData structure
+        saveUserData(freq, location, ssid, password, emailid);
+    } else {
+        Serial.println(F("Error: Failed to parse the received data correctly."));
+    }
+}
+
+// Save data into the global userData structure
+void saveUserData(const String& freq, const String& location, const String& ssid, const String& password, const String& emailid) {
+
+    freq.toCharArray(g_userData.freq, sizeof(g_userData.freq));
+
+    location.toCharArray(g_userData.locData, sizeof(g_userData.locData));
+
+    ssid.toCharArray(g_userData.wifiSSID, sizeof(g_userData.wifiSSID));
+
+    password.toCharArray(g_userData.wifiPassword, sizeof(g_userData.wifiPassword));
+
+    emailid.toCharArray(g_userData.emailid, sizeof(g_userData.emailid));
+    
+    //To be stored into Non-volatile memory
+    if(ssid!= "") {
+      Serial.println("Updating last ssid data!");
+      prefs.putString("ssid", ssid);
+    }
+    else {
+        Serial.println("Holding on to last ssid data!");
+        //Do nothing; Hold onto last data
+    }
+
+    if(password!= "") {
+      Serial.println("Updating last password data!");
+      prefs.putString("password", password);
+    }
+    else {
+        Serial.println("Holding on to last password data!");
+        //Do nothing; Hold onto last data
+    }
+
+    if(freq!= "") {
+      Serial.println("Updating last frequency data!");
+      prefs.putString("frequency", freq);
+    }
+    else {
+        Serial.println("Holding on to last frequency data!");
+        //Do nothing; Hold onto last data
+    }
+
+    if(location!= "") {
+      Serial.println("Updating last location data!");
+      prefs.putString("locData", location);
+    }
+    else {
+        Serial.println("Holding on to last location data!");
+        //Do nothing; Hold onto last data
+    }
+
+    if(emailid!= "") {
+      Serial.println("Updating last email-id data!");
+      prefs.putString("emailID", emailid);
+    }
+    else {
+        Serial.println("Holding on to last email-ID data!");
+        //Do nothing; Hold onto last data
+    }
+
+    prefs.end();
+
+    // Debugging: Print the stored values
+    //Serial.println(F("Stored Data:"));
+    //Serial.println("Device ID: " + String(g_userData.freq));
+    //Serial.println("Location: " + String(g_userData.locData));
+    //Serial.println("SSID: " + String(g_userData.wifiSSID));
+    //Serial.println("password: " + String(g_userData.wifiPassword));
+    
+}
+
+#include "dataAlerts.h"
+
+
+String alertMessage;
+
+
+// SMTPSession
+SMTPSession smtp;
+
+// SMTP Server
+#define SMTP_HOST "smtp.gmail.com"
+#define SMTP_PORT 465
+
+// Email credentials
+#define AUTHOR_EMAIL "planmonproject@gmail.com"
+#define AUTHOR_PASSWORD "dhmjubaheawfeftj"
+
+const char* fileNameda = "/slave_devices.csv";
+
+struct deviceinfo {
+    String deviceID[30];
+    bool deviceprocess[30];
+}deviceobj;
+
+
+
+void dataAlertsInit() {
+  // Enable SMTP debug
+  smtp.debug(1);
+}
+
+void dataAlertsRun() {
+  processLastDayData(); // Process data once a day
+}
+
+// Function to process only the last day's data from the SD card
+void processLastDayData() {
+  File dataFile = SD.open(fileNameda);
+  if (!dataFile) {
+    Serial.println("Error opening file!");
+    return;
+  }
+
+  // Find the latest date in the file
+  int lastDay = 0, lastMonth = 0, currentday = 0, currentmonth = 0;
+  currentday = rtc.getDay();
+  currentmonth = rtc.getMonth()+1;
+
+  // Get all unique IDs for the last day's data
+  int idCount = 0;
+  getUniqueIDs(fileNameda,deviceobj.deviceID);
+
+  for(int i=0;i<30;i++) {
+    if((deviceobj.deviceID[i]).isEmpty()) {
+        break;
+    }
+    else {
+        idCount = idCount+1;
+        continue;
+    }
+  }
+
+  String alertMessage = "Kindly pay attention to the plants! Date: " + String(currentday) + "/" + String(currentmonth) + "\n"; ;
+  
+  char buffer[15];
+
+  // Process data for each ID and add to the alert message
+  for (int i = 0; i < idCount; i++) {
+    (deviceobj.deviceID[i]).toCharArray(buffer,15);
+    processDaytimeDataForID(buffer, currentday, alertMessage);
+  }
+
+  dataFile.close();
+
+  // Send email if the alert message has content
+  if (alertMessage.length() > 0) {
+    sendEmail(alertMessage);
+  } else {
+    Serial.println("No alerts triggered today.");
+  }
+}
+
+// Parse a single line from the file
+SensorData parseLine(const String& line) {
+  SensorData data;
+  int values[9];
+  int index = 0;
+  int start = 0;
+
+  for (int i = 0; i < line.length(); i++) {
+    if (line[i] == ',' || i == line.length() - 1) {
+      values[index++] = line.substring(start, i + (i == line.length() - 1 ? 1 : 0)).toInt();
+      start = i + 1;
+      if (index >= 9) break;
+    }
+  }
+
+  data.temperature = values[1];
+  data.humidity = values[2];
+  data.soilMoisture = values[3];
+  data.lightIntensity = values[4];
+
+  return data;
+}
+
+// Process daytime data for a specific ID and the last day's data
+void processDaytimeDataForID(const char *fileNameda, int currentdate, String& alertMessage) {
+  String timedata = getLastRowFirstColumn(fileNameda);
+  int year;
+  int month;
+  int day;
+  int hour;
+  int min;
+  extractTime(timedata, year, month, day, hour, min);
+
+  if(currentdate==day) {
+    //Process the data
+  String line;
+  SensorData data;
+
+  File dataFile = SD.open("/" + String(fileNameda) + ".csv");
+  Serial.print("Attempting to open file:");
+  Serial.print(String(fileNameda) + ".csv");
+  if (!dataFile) {
+    Serial.println("Error opening file!");
+    return;
+  }
+
+  // Define 3-hour daytime intervals
+  const int intervals[5][2] = {{6, 9}, {9, 12}, {12, 15}, {15, 18}, {18, 21}};
+  
+  for (int interval = 0; interval < 5; interval++) {
+    float tempSum = 0, humiditySum = 0, soilMoistureSum = 0, lightSum = 0;
+    int readingCount = 0;
+
+    dataFile.seek(0); // Reset file pointer
+    while (dataFile.available()) {
+      line = dataFile.readStringUntil('\n');
+    int commaIndex = line.indexOf(',');
+    String Timeinfo;
+    if (commaIndex > 0) {
+       Timeinfo = line.substring(0, commaIndex); 
+    }
+    else {
+      Serial.println("Comma not found.");
+    }
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    extractTime(Timeinfo, year, month, day, hour, min);
+    
+      // Check if data matches the target ID, date, and falls within the interval
+      if ((day == currentdate) &&
+          (month == (rtc.getMonth()+1)) &&
+          (hour >= intervals[interval][0]) &&
+          (hour < intervals[interval][1])) {
+
+        data = parseLine(line);
+        // Check for garbage or invalid readings and increment reading count only for valid data
+  
+        tempSum += data.temperature;
+        humiditySum += data.humidity;
+        soilMoistureSum += data.soilMoisture;
+        lightSum += data.lightIntensity;
+        readingCount++;
+        
+      }
+    }
+
+    if (readingCount > 0) {
+      float avgTemp = tempSum / readingCount;
+      float avgHumidity = humiditySum / readingCount;
+      float avgSoilMoisture = soilMoistureSum / readingCount;
+      float avgLightIntensity = lightSum / readingCount;
+
+      String alertForInterval = "";
+
+      // Check if the averages exceed threshold values
+      if (avgTemp < g_thresholdData.TempThreshMin || avgTemp > g_thresholdData.TempThreshMax) {
+        alertForInterval += "Temperature beyond threshold, Value: " + String(avgTemp) + "deg C\n";
+      }
+      if (avgHumidity < g_thresholdData.HumThreshMin || avgHumidity > g_thresholdData.HumThreshMax) {
+        alertForInterval += "Humidity beyond threshold, Value: " + String(avgHumidity) + "%\n";
+      }
+      if (avgSoilMoisture < g_thresholdData.SoilMoistThreshMin || avgSoilMoisture > g_thresholdData.SoilMoistThreshMax) {
+        alertForInterval += "Soil moisture beyond threshold, Value: " + String(avgSoilMoisture) + "%\n";
+      }
+      if (avgLightIntensity < g_thresholdData.TempThreshMin || avgLightIntensity > g_thresholdData.TempThreshMax) {
+        alertForInterval += "Light intensity  beyond threshold, Value: " + String(avgLightIntensity) + " lux\n";
+      }
+
+      // Append to alert message if thresholds are exceeded
+      if (alertForInterval.length() > 0) {
+        alertMessage += "\nAlert for Node ID " + String(fileNameda) + " during " +
+                        String(intervals[interval][0]) + ":00 to " +
+                        String(intervals[interval][1]) + ":00\n" + alertForInterval ;
+      }
+    }
+  }
+
+  dataFile.close();
+  }
+  else {
+    //Do nothing as todays data is not available
+  }
+}
+
+
+
+// Function to send email
+void sendEmail(const String& message) {
+  Session_Config config;
+  config.server.host_name = SMTP_HOST;
+  config.server.port = SMTP_PORT;
+  config.login.email = AUTHOR_EMAIL;
+  config.login.password = AUTHOR_PASSWORD;
+  config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
+  config.time.gmt_offset = 3;
+
+  SMTP_Message emailMessage;
+  emailMessage.sender.name = F("Team PlanMon");
+  emailMessage.sender.email = AUTHOR_EMAIL;
+  emailMessage.subject = F("Plant monitoring data alert");
+  emailMessage.addRecipient(F("Recipient"), g_userData.emailid);
+  Serial.print("Sending email to:");
+  Serial.println(g_userData.emailid);
+  emailMessage.text.content = message.c_str();
+  emailMessage.text.charSet = "us-ascii";
+  emailMessage.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
+
+  if (!smtp.connect(&config)) {
+    Serial.printf("Error connecting to SMTP: %s\n", smtp.errorReason().c_str());
+    return;
+  }
+
+  if (!MailClient.sendMail(&smtp, &emailMessage)) {
+    Serial.printf("Error sending email: %s\n", smtp.errorReason().c_str());
+  } else {
+    Serial.println("Email sent successfully!");
+  }
+}
+
+// Callback function for SMTP status
+void smtpCallback(SMTP_Status status) {
+  Serial.println(status.info());
+  if (status.success()) {
+    Serial.println("Email sent successfully.");
+  } else {
+    Serial.println("Email failed to send.");
+  }
+}
+
+// Function to extract time from a string in "YYYY-MM-DD HH:MM" format
+void extractTime(const String& timeString, int& year, int& month, int& day, int& hour, int& minute) {
+  // Extract year
+  year = timeString.substring(6, 10).toInt();
+  //Serial.println(year);
+
+  // Extract month
+  month = timeString.substring(3, 5).toInt();
+  //Serial.println(month);
+
+  // Extract day
+  day = timeString.substring(0, 2).toInt();
+  //Serial.println(day);
+
+  // Extract hour
+  hour = timeString.substring(11, 13).toInt();
+  //Serial.println(hour);
+
+  // Extract minute
+  minute = timeString.substring(14, 16).toInt();
+  //Serial.println(minute);
+}
+
+/* Styling for the Change Display Name Button */
+/*
+#change-display-name-btn {
+  font-size: 18px;
+  padding: 12px 25px;
+  background-color: #FFC107; /* Yellow background */
+  color: black;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  display: none; /* Initially hidden */
+}
+
+#change-display-name-btn:hover {
+  background-color: #E0A800; /* Darker yellow on hover */
+  transform: scale(1.05);
+}
+
+#change-display-name-btn:active {
+  background-color: #C69500; /* Even darker yellow on active */
+}

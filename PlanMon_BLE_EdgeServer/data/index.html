@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-gauges@2.1.7/gauge.min.js"></script>
+</head>
+<body>
+  <!-- Main Page Title -->
+  <div class="topnav">
+    <h1>Welcome to PlanMon Device</h1>
+  </div>
+  <!-- Show Devices Button -->
+  <div class="button-container">
+    <button id="Show-Device-Button" onclick="showDevices()">Show Devices</button>
+    <button id="change-display-name-btn" style="display: none;" onclick="showChangeNameForm()">Change Display Name</button>
+  </div>
+  <!-- Device Buttons Container -->
+  <div id="device-buttons-container"></div>
+
+  <div id="selected-device" style="display: none;">
+    <h3>Selected Device: <span id="device-name">None</span></h3> <!-- Where the selected device name will be displayed -->
+  </div>
+
+  <!-- Change Display Name Form (Initially Hidden) -->
+  <div id="change-name-form" style="display: none; margin-top: 20px;">
+    <label for="current-name">Current Display Name:</label>
+    <input type="text" id="current-name" placeholder="Enter Current Display Name">
+    <label for="new-name">New Display Name:</label>
+    <input type="text" id="new-name" placeholder="Enter New Display Name">
+    <div id="form-buttons">
+      <button onclick="submitDisplayNameChange()">Submit</button>
+      <button id="cancel-button" onclick="hideChangeNameForm()">Cancel</button>
+    </div>
+  </div>
+  
+  <!-- Content Section (Initially Hidden) -->
+  <div id="content" style="display:none;">    
+    <div class="card-grid">
+      <div class="card">
+        <p class="card-title">Temperature</p>
+        <canvas id="gauge-temperature"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Humidity</p>
+        <canvas id="gauge-humidity"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Soil Moisture</p>
+        <canvas id="gauge-moisture"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Light Intensity</p>
+        <canvas id="gauge-light"></canvas>
+      </div>
+    </div>
+
+    <!-- Button to Show Graphs -->
+    <div class="show-graphs-btn">
+      <button id="show-graphs-button" onClick="showGraphs()">Show Graphs</button>
+    </div>
+
+    <!-- Filter Options (Hidden Initially) -->
+    <div id="filter-options" style="display: none;">
+      <label for="start-date">Start Date:</label>
+      <input type="date" id="start-date" name="start-date">
+      <label for="end-date">End Date:</label>
+      <input type="date" id="end-date" name="end-date">
+      <button onclick="applyFilter()">Filter</button>
+      <button id="update-button" onclick="resetFilters()">Reset</button>
+    </div>
+
+    <!-- Graphs Section (Initially Hidden) -->
+    <div id="graphs-section" class="graphs" style="display: none;">
+      <canvas id="temperature-graph"></canvas>
+      <canvas id="humidity-graph"></canvas>
+      <canvas id="moisture-graph"></canvas>
+      <canvas id="light-graph"></canvas>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+/* General Styles */
+html {
+  font-family: Arial, Helvetica, sans-serif;
+  display: inline-block;
+  text-align: center;
+}
+h1 {
+  font-size: 1.8rem;
+  color: white;
+}
+p {
+  font-size: 1.4rem;
+}
+.topnav {
+  overflow: hidden;
+  background-color: #0A1128;
+}
+body {
+  margin: 0;
+}
+
+/* Content Wrapper */
+.content {
+  padding: 5%;
+}
+
+/* Ensure the Show Devices and Change Display Name buttons are centrally aligned */
+.button-container {
+  text-align: center;
+  margin-bottom: 20px; /* Space below the buttons */
+}
+
+/* Reusable Primary Button Style */
+.primary-button {
+  font-size: 18px;
+  padding: 12px 25px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.primary-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.primary-button:active {
+  background-color: #004085;
+}
+
+/* Highlight style for the button */
+.highlighted {
+  background-color: yellow;
+  color: rgb(17, 1, 1);
+  border: 2px solid #388E3C;
+}
+
+#selected-device {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #333;
+}
+
+/* Styling for the Show Devices Button */
+#show-devices-btn {
+  /* Reuse primary button styles */
+  composes: primary-button;
+}
+
+/* Container for Device Buttons */
+.device-buttons-grid {
+  display: flex;
+  flex-wrap: wrap; /* Allow buttons to wrap onto the next line */
+  gap: 15px; /* Space between buttons */
+  margin-top: 20px;
+  justify-content: center; /* Center-align buttons */
+}
+
+/* Styling for Individual Device Buttons */
+.device-button {
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.device-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.device-button:active {
+  background-color: #3e8e41;
+}
+
+/* Styling for Change Display Name Form */
+#change-name-form {
+  display: none; /* Initially hidden */
+  margin-top: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+#change-name-form label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+#change-name-form input {
+  font-size: 16px;
+  padding: 10px;
+  width: 80%;
+  max-width: 300px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#change-name-form button {
+  font-size: 18px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#change-name-form button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+#change-name-form button:active {
+  background-color: #1e7e34;
+}
+
+/* Grid for Gauges */
+.card-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.card {
+  background-color: white;
+  box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, 0.5);
+  padding: 1rem;
+}
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #034078;
+}
+
+/* Graphs Section */
+.graphs {
+  margin-top: 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-gap: 2rem;
+  grid-template-columns: 1fr;
+}
+canvas {
+  max-width: 100%;
+  height: auto;
+  box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, 0.5);
+  background-color: white;
+  border-radius: 5px;
+}
+
+/* Filter Section (Initially Hidden) */
+#filter-options {
+  display: flex;
+  justify-content: center; /* Center the section */
+  gap: 10px; /* Add space between elements */
+  margin-top: 20px;
+}
+
+#filter-options input,
+#filter-options button {
+  font-size: 16px;
+  padding: 10px 20px;
+}
+
+#filter-options input {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+#filter-options button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#filter-options button:hover {
+  background-color: #1976D2;
+  transform: scale(1.05);
+}
+
+#filter-options button:active {
+  background-color: #1565C0;
+}
+
+/* Specific Styling for the "Update" Button */
+#filter-options #update-button {
+  background-color: #FFC107; /* Yellow background for distinction */
+  color: black; /* Black text for contrast */
+}
+
+#filter-options #update-button:hover {
+  background-color: #E0A800; /* Darker yellow on hover */
+}
+
+#filter-options #update-button:active {
+  background-color: #C69500; /* Even darker yellow on active */
+}
+
+/* Show Graphs Button */
+#show-graphs-button {
+  font-size: 18px;
+  padding: 12px 25px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#show-graphs-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+#show-graphs-button:active {
+  background-color: #1e7e34;
+}
+
+/* Styling for the Content */
+#content {
+  display: none;
+  margin-top: 20px;
+  padding: 20px; /* Add padding for better spacing */
+}
+
+/* Hide the graphs initially */
+#graphs-section {
+  display: none;
+}
+
+/* Responsive Design for Filter Options */
+@media (max-width: 600px) {
+  #filter-options {
+    flex-direction: column; /* Stack inputs and buttons vertically */
+    align-items: center;
+  }
+}
