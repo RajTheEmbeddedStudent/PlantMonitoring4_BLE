@@ -1,0 +1,46 @@
+/*
+Intensity Range for Indoor Plants :- 100ftc - -500ftc
+*/
+//#define LUX_CALC_SCALAR 12518931
+//#define LUX_CALC_EXPONENT  -1.405
+int ldrPin1 = 34;
+int ldrPin2 = 23;
+int ldrPin3 = 22;
+float V_R=0.0, V_L=0.0,lux=0.0, vout = 0.0, R_L = 0.0, ldrValue = 0.0, ft = 0.0;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  pinMode(ldrPin1, INPUT);
+  pinMode(ldrPin2, OUTPUT);
+  pinMode(ldrPin3, OUTPUT);
+}
+
+void loop() {
+  ldrValue = analogRead(ldrPin1);//reading sensor output
+  V_R = ldrValue/4095.0*5;
+  R_L = (V_R*10000)/(1-V_R/5);
+  lux = pow(50*1e3*pow(10,0.7)/R_L,(1/0.7));
+  if (lux > 1076 && lux < 2690)
+  {
+    digitalWrite(ldrPin2, HIGH);
+    digitalWrite(ldrPin3, LOW);
+    Serial.print("Light intensity is optimal. ");
+    Serial.println(lux*10);
+  }
+  else if (lux > 2690)
+  {
+    digitalWrite(ldrPin3, HIGH);
+    digitalWrite(ldrPin2, LOW);
+    Serial.print("Light intensity is more, please move to shady place. ");
+    Serial.println(lux)*10;
+  }
+  else
+  {
+    digitalWrite(ldrPin2, LOW);
+    digitalWrite(ldrPin3, LOW);
+    Serial.print("Light intensity is low, please change the position yo brighter or give compliment light. ");
+    Serial.println(lux*10);
+  }
+  // Wait for a short time before the next reading
+  delay(5000);
+}
