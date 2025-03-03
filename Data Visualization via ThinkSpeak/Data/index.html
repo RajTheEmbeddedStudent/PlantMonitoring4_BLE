@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlanMon Dev1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-gauges@2.1.7/gauge.min.js"></script>
+</head>
+<body>
+  <div class="topnav">
+    <h1>ESP IoT Dashboard</h1>
+  </div>
+  <div class="content">
+    <div class="card-grid">
+      <div class="card">
+        <p class="card-title">Temperature</p>
+        <canvas id="gauge-temperature"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Humidity</p>
+        <canvas id="gauge-humidity"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Soil Moisture</p>
+        <canvas id="gauge-moisture"></canvas>
+      </div>
+      <div class="card">
+        <p class="card-title">Light Intensity</p>
+        <canvas id="gauge-light"></canvas>
+      </div>
+    </div>
+
+    <!-- Add Date Filter Section -->
+  <div class="date-filter">
+    <label for="start-date">Start Date:</label>
+    <input type="date" id="start-date" name="start-date">
+
+    <label for="end-date">End Date:</label>
+    <input type="date" id="end-date" name="end-date">
+
+    <button id="filter-button">Filter Graphs</button>
+  </div>
+  
+    <div class="graphs">
+      <canvas id="temperature-graph"></canvas>
+      <canvas id="humidity-graph"></canvas>
+      <canvas id="moisture-graph"></canvas>
+      <canvas id="light-graph"></canvas>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
